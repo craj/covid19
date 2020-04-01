@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <title>Covid19 India Count - Statewise Confirmed Cases Progression</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <style>
+    text{
+      font-size: 16px;
+      font-family: Open Sans, sans-serif;
+    }
+    text.title{
+      font-size: 24px;
+      font-weight: 500;
+    }
+      text.subTitle{
+        font-weight: 500;
+        fill: #777777;
+      }
+      text.caption{
+        font-weight: 400;
+        font-size: 14px;
+        fill: #777777;
+      }
+      text.label{
+        font-weight: 600;
+      }
+    
+      text.valueLabel{
+       font-weight: 300;
+      }
+    
+      text.yearText{
+        font-size: 64px;
+        font-weight: 700;
+        opacity: 0.25;
+      }
+      .tick text {
+        fill: #777777;
+      }
+      .xAxis .tick:nth-child(2) text {
+        text-anchor: start;
+      }
+      .tick line {
+        shape-rendering: CrispEdges;
+        stroke: #dddddd;
+      }
+      .tick line.origin{
+        stroke: #aaaaaa;
+      }
+      path.domain{
+        display: none;
+      }
+  </style>
+</head>
+
+<body>
+  <script>
+
+    var svg = d3.select("body").append("svg")
+      .attr("width", 960)
+      .attr("height", 600)
+      .attr("style", "margin-top: 10px;margin-left: 10px;");
+    
+    
+    var tickDuration = 1000;
+    
+    var top_n = 10;
+    var height = 600;
+    var width = 960;
+    
+    const margin = {
+      top: 80,
+      right: 0,
+      bottom: 5,
+      left: 0
+    };
+  
+    let barPadding = (height-(margin.bottom+margin.top))/(top_n*5);
+      
+    let title = svg.append('text')
+     .attr('class', 'title')
+     .attr('y', 24)
+     .html('Covid19 Confirmed Cases Progression in India');
+  
+    let subTitle = svg.append("text")
+     .attr("class", "subTitle")
+     .attr("y", 55)
+     .html("State, Case Count  ");
+   
+    let caption = svg.append('text')
+     .attr('class', 'caption')
+     .attr('x', width)
+     .attr('y', height-5)
+     .style('text-anchor', 'end')
+     .html('Source: covid19india.org | github.com/craj/covid19');
+
+     var start_date = new Date(2020, 2, 1);
+
+     let sDateSlice = start_date.toJSON().slice(0, 10); 
+
+     var stDateRef = sDateSlice.slice(8, 10) + '/'  
+                       + sDateSlice.slice(5, 7) + '/'  
+                       + sDateSlice.slice(0, 4);  
+
+     let year = 2020+((Date.UTC(start_date.getFullYear(), start_date.getMonth(), start_date.getDate()) - Date.UTC(start_date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000)/1000;
+
+     var end_date = new Date();     
+
+     let end = 2020+((Date.UTC(end_date.getFullYear(), end_date.getMonth(), end_date.getDate()) - Date.UTC(end_date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000)/1000;
+
+// Thanks to covid19india.org and github.com/amodm for the data source
+
+  $.getJSON('https://api.rootnet.in/covid19-in/unofficial/covid19india.org', function(data) {
+
+    var states = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"]
+
+
+    var daily_count  = [];
+
+    states.forEach( s => {
+      var dt = new Date(2020, 0, 30);
+      daily_count[s] = [];
+      for(;dt <= end_date;dt.setDate(dt.getDate() + 1)) {
+            var date = dt.toJSON().slice(0, 10); 
+            var nDate = date.slice(8, 10) + '/'  
+                       + date.slice(5, 7) + '/'  
+                       + date.slice(0, 4);         
+        daily_count[s][nDate] = 0;
+      }
+    })
+
+    var newData = [];
+
+      data.data.rawPatientData.forEach(d => {
+        daily_count[d.state][d.reportedOn] = daily_count[d.state][d.reportedOn] + 1;
+      });    
+
+    states.forEach( s => {
+      var dt = new Date(2020, 0, 30);
+      let prvValue = 0;
+      for(;dt <= end_date;dt.setDate(dt.getDate() + 1)) {
+            var date = dt.toJSON().slice(0, 10); 
+            var nDate = date.slice(8, 10) + '/'  
+                       + date.slice(5, 7) + '/'  
+                       + date.slice(0, 4);
+
+            let yt = 2020+((Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()) - Date.UTC(dt.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000)/1000;
+                                
+            newData.push({ "state" : s, "year" : yt, "date": nDate, "value": prvValue + daily_count[s][nDate], "lastValue" : prvValue });
+            prvValue = prvValue + daily_count[s][nDate];
+      }
+    })
+
+    data = newData;
+  
+       data.forEach(d => {
+        d.value = +d.value,
+        d.lastValue = +d.lastValue,
+        d.value = isNaN(d.value) ? 0 : d.value,
+        d.year = +d.year,
+        d.colour = d3.hsl(Math.random()*360,0.75,0.75)
+      });
+
+
+     let sDate = new Date(2020, 0, 30).toJSON().slice(0, 10); 
+     var stDate = sDate.slice(8, 10) + '/'  
+                       + sDate.slice(5, 7) + '/'  
+                       + sDate.slice(0, 4);  
+    
+    
+     let yearSlice = data.filter(d => d.year == year && !isNaN(d.value))
+      .sort((a,b) => b.value - a.value)
+      .slice(0, top_n);
+  
+      yearSlice.forEach((d,i) => d.rank = i);
+    
+     // console.log('yearSlice: ', yearSlice)
+  
+     let x = d3.scaleLinear()
+        .domain([0, d3.max(yearSlice, d => d.value)])
+        .range([margin.left, width-margin.right-65]);
+  
+     let y = d3.scaleLinear()
+        .domain([top_n, 0])
+        .range([height-margin.bottom, margin.top]);
+  
+     let xAxis = d3.axisTop()
+        .scale(x)
+        .ticks(width > 500 ? 5:2)
+        .tickSize(-(height-margin.top-margin.bottom))
+        .tickFormat(d => d3.format(',')(d));
+  
+     svg.append('g')
+       .attr('class', 'axis xAxis')
+       .attr('transform', `translate(0, ${margin.top})`)
+       .call(xAxis)
+       .selectAll('.tick line')
+       .classed('origin', d => d == 0);
+  
+     svg.selectAll('rect.bar')
+        .data(yearSlice, d => d.state)
+        .enter()
+        .append('rect')
+        .attr('class', 'bar')
+        .attr('x', x(0)+1)
+        .attr('width', d => x(d.value)-x(0)-1)
+        .attr('y', d => y(d.rank)+5)
+        .attr('height', y(1)-y(0)-barPadding)
+        .style('fill', d => d.colour);
+      
+     svg.selectAll('text.label')
+        .data(yearSlice, d => d.state)
+        .enter()
+        .append('text')
+        .attr('class', 'label')
+        .attr('x', d => x(d.value)-8)
+        .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1)
+        .style('text-anchor', 'end')
+        .html(d => d.state);
+      
+    svg.selectAll('text.valueLabel')
+      .data(yearSlice, d => d.state)
+      .enter()
+      .append('text')
+      .attr('class', 'valueLabel')
+      .attr('x', d => x(d.value)+5)
+      .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1)
+      .text(d => d3.format(',.0f')(d.lastValue));
+
+    let yearText = svg.append('text')
+      .attr('class', 'yearText')
+      .attr('x', width-margin.right)
+      .attr('y', height-25)
+      .style('text-anchor', 'end')
+      .html(stDateRef)
+      .call(halo, 10);
+     
+   let ticker = d3.interval(e => {
+
+      yearSlice = data.filter(d => d.year == year && !isNaN(d.value))
+        .sort((a,b) => b.value - a.value)
+        .slice(0,top_n);
+
+      yearSlice.forEach((d,i) => d.rank = i);
+     
+      // console.log('IntervalYear: ', yearSlice);
+
+      x.domain([0, d3.max(yearSlice, d => d.value)]); 
+     
+      svg.select('.xAxis')
+        .transition()
+        .duration(tickDuration)
+        .ease(d3.easeLinear)
+        .call(xAxis);
+    
+       let bars = svg.selectAll('.bar').data(yearSlice, d => d.state);
+    
+       bars
+        .enter()
+        .append('rect')
+        .attr('class', d => `bar ${d.state.replace(/\s/g,'_')}`)
+        .attr('x', x(0)+1)
+        .attr( 'width', d => x(d.value)-x(0)-1)
+        .attr('y', d => y(top_n+1)+5)
+        .attr('height', y(1)-y(0)-barPadding)
+        .style('fill', d => d.colour)
+        .transition()
+          .duration(tickDuration)
+          .ease(d3.easeLinear)
+          .attr('y', d => y(d.rank)+5);
+          
+       bars
+        .transition()
+          .duration(tickDuration)
+          .ease(d3.easeLinear)
+          .attr('width', d => x(d.value)-x(0)-1)
+          .attr('y', d => y(d.rank)+5);
+            
+       bars
+        .exit()
+        .transition()
+          .duration(tickDuration)
+          .ease(d3.easeLinear)
+          .attr('width', d => x(d.value)-x(0)-1)
+          .attr('y', d => y(top_n+1)+5)
+          .remove();
+
+       let labels = svg.selectAll('.label')
+          .data(yearSlice, d => d.state);
+     
+       labels
+        .enter()
+        .append('text')
+        .attr('class', 'label')
+        .attr('x', d => x(d.value)-8)
+        .attr('y', d => y(top_n+1)+5+((y(1)-y(0))/2))
+        .style('text-anchor', 'end')
+        .html(d => d.state)    
+        .transition()
+          .duration(tickDuration)
+          .ease(d3.easeLinear)
+          .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1);
+             
+    
+   	   labels
+          .transition()
+          .duration(tickDuration)
+            .ease(d3.easeLinear)
+            .attr('x', d => x(d.value)-8)
+            .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1);
+     
+       labels
+          .exit()
+          .transition()
+            .duration(tickDuration)
+            .ease(d3.easeLinear)
+            .attr('x', d => x(d.value)-8)
+            .attr('y', d => y(top_n+1)+5)
+            .remove();
+         
+
+     
+       let valueLabels = svg.selectAll('.valueLabel').data(yearSlice, d => d.state);
+    
+       valueLabels
+          .enter()
+          .append('text')
+          .attr('class', 'valueLabel')
+          .attr('x', d => x(d.value)+5)
+          .attr('y', d => y(top_n+1)+5)
+          .text(d => d3.format(',.0f')(d.lastValue))
+          .transition()
+            .duration(tickDuration)
+            .ease(d3.easeLinear)
+            .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1);
+            
+       valueLabels
+          .transition()
+            .duration(tickDuration)
+            .ease(d3.easeLinear)
+            .attr('x', d => x(d.value)+5)
+            .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1)
+            .tween("text", function(d) {
+               let i = d3.interpolateRound(d.lastValue, d.value);
+               return function(t) {
+                 this.textContent = d3.format(',')(i(t));
+              };
+            });
+      
+     
+      valueLabels
+        .exit()
+        .transition()
+          .duration(tickDuration)
+          .ease(d3.easeLinear)
+          .attr('x', d => x(d.value)+5)
+          .attr('y', d => y(top_n+1)+5)
+          .remove();
+    
+     
+     if(year == end ) ticker.stop();
+
+     year =  parseFloat(year) + parseFloat('0.001');
+     year = year.toFixed(3);
+
+     start_date.setDate(start_date.getDate()+1) ; 
+
+     let dispDate = start_date.toJSON().slice(0, 10); 
+
+     var dispDateRef = dispDate.slice(8, 10) + '/'  
+                       + dispDate.slice(5, 7) + '/'  
+                       + dispDate.slice(0, 4);  
+
+      yearText.html(dispDateRef);
+
+   },tickDuration);
+
+ });
+    
+ const halo = function(text, strokeWidth) {
+  text.select(function() { return this.parentNode.insertBefore(this.cloneNode(true), this); })
+    .style('fill', '#ffffff')
+     .style( 'stroke','#ffffff')
+     .style('stroke-width', strokeWidth)
+     .style('stroke-linejoin', 'round')
+     .style('opacity', 1);
+   
+}   
+  
+
+  </script>
+</body>
