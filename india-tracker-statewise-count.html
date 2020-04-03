@@ -90,12 +90,12 @@ References:
     let title = svg.append('text')
      .attr('class', 'title')
      .attr('y', 24)
-     .html('Covid19 Confirmed Cases Progression in India');
+     .html('Covid19 Confirmed Cases Progression in India (Live)');
   
     let subTitle = svg.append("text")
      .attr("class", "subTitle")
      .attr("y", 55)
-     .html("State, Case Count  ");
+     .html("State, Case Count");
    
     let caption = svg.append('text')
      .attr('class', 'caption')
@@ -104,31 +104,31 @@ References:
      .style('text-anchor', 'end')
      .html('Source: covid19india.org | craj.github.io/covid19');
 
-     var start_date = new Date(2020, 2, 1);
+     const start_date = new Date(2020, 2, 1);
 
      let sDateSlice = start_date.toJSON().slice(0, 10); 
 
-     var stDateRef = sDateSlice.slice(8, 10) + '/'  
+     let stDateRef = sDateSlice.slice(8, 10) + '/'  
                        + sDateSlice.slice(5, 7) + '/'  
                        + sDateSlice.slice(0, 4);  
 
      let year = 2020+((Date.UTC(start_date.getFullYear(), start_date.getMonth(), start_date.getDate()) - Date.UTC(start_date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000)/1000;
 
-     var end_date = new Date();     
+     let end_date = new Date();     
 
-     let end = 2020+((Date.UTC(end_date.getFullYear(), end_date.getMonth(), end_date.getDate()) - Date.UTC(end_date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000)/1000;
+     const end = 2020+((Date.UTC(end_date.getFullYear(), end_date.getMonth(), end_date.getDate()) - Date.UTC(end_date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000)/1000;
 
 // Thanks to covid19india.org and github.com/amodm for the data source
 
   $.getJSON('https://api.rootnet.in/covid19-in/unofficial/covid19india.org', function(data) {
 
-    var states = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"]
+    const states = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"]
 
 
-    var daily_count  = [];
+    let daily_count  = [];
 
     states.forEach( s => {
-      var dt = new Date(2020, 0, 30);
+      let dt = new Date(2020, 0, 30);
       daily_count[s] = [];
       for(;dt <= end_date;dt.setDate(dt.getDate() + 1)) {
             var date = dt.toJSON().slice(0, 10); 
@@ -139,14 +139,14 @@ References:
       }
     })
 
-    var newData = [];
+    let newData = [];
 
       data.data.rawPatientData.forEach(d => {
         daily_count[d.state][d.reportedOn] = daily_count[d.state][d.reportedOn] + 1;
       });    
 
     states.forEach( s => {
-      var dt = new Date(2020, 0, 30);
+      let dt = new Date(2020, 0, 30);
       let prvValue = 0;
       for(;dt <= end_date;dt.setDate(dt.getDate() + 1)) {
             var date = dt.toJSON().slice(0, 10); 
@@ -161,6 +161,8 @@ References:
       }
     })
 
+    let lastRefreshed = data.data.lastRefreshed;
+
     data = newData;
   
        data.forEach(d => {
@@ -171,12 +173,22 @@ References:
         d.colour = d3.hsl(Math.random()*360,0.75,0.75)
       });
 
-
      let sDate = new Date(2020, 0, 30).toJSON().slice(0, 10); 
-     var stDate = sDate.slice(8, 10) + '/'  
+     let stDate = sDate.slice(8, 10) + '/'  
                        + sDate.slice(5, 7) + '/'  
                        + sDate.slice(0, 4);  
-    
+
+      const day = lastRefreshed.slice(8, 10);
+      const month = lastRefreshed.slice(5, 7);
+      const yr = lastRefreshed.slice(0, 4);
+      const time = lastRefreshed.slice(11,19);
+
+      let lastUpdated =  `${day}/${month}/${yr} ${time.slice(0, 5)} IST`;
+
+     subTitle = svg.append("text")
+     .attr("class", "subTi  tle")
+     .attr("y", 55)
+     .html("State, Case Count (Last updated - "+lastUpdated+")");
     
      let yearSlice = data.filter(d => d.year == year && !isNaN(d.value))
       .sort((a,b) => b.value - a.value)
