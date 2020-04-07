@@ -1,12 +1,26 @@
 <!-- 
 
-Copyright 2020 Chandan Raj
+MIT License
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Copyright (c) 2020 Chandan Raj
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 Source: https://github.com/craj/covid19/
 
@@ -18,7 +32,7 @@ References:
 
 <head>
   <meta charset="utf-8">
-  <title>Covid19 Karnataka Count - Districtwise Confirmed Cases Progression</title>
+  <title>Covid19 India Count - Statewise Confirmed Cases Progression</title>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <style>
@@ -41,6 +55,7 @@ References:
       font-weight: 400;
       font-size: 14px;
       fill: #777777;
+      opacity: 0.7;
     }
 
     text.label {
@@ -51,8 +66,19 @@ References:
       font-weight: 300;
     }
 
-    text.yearText {
-      font-size: 64px;
+    text.dateText {
+      font-size: 40px;
+      font-weight: 700;
+      opacity: 0.4;
+    }
+
+    text.countText {
+      font-size: 90px;
+      font-weight: 700;
+    }
+
+    text.totalText {
+      font-size: 30px;
       font-weight: 700;
       opacity: 0.25;
     }
@@ -94,6 +120,21 @@ References:
       left: 0
     };
 
+    const titleText = "Covid19 Confirmed Cases Progression in Karnataka (Live)";
+    const subText = "Districtwise Case Count";
+    const capText = "Source: covid19india.org | craj.github.io/covid19";
+    const totalText = "Total Count";
+    const start_date = new Date(2020, 2, 10);
+    const end_date = new Date();
+    const spreadsheetUrl = 'https://spreadsheets.google.com/feeds/list/1nzXUdaIWC84QipdVGUKTiCSc5xntBbpMpzLm6Si33zk/1/public/values?alt=json&callback=extractData';
+    let totalCount = 0;
+
+    end_date.setDate(end_date.getDate() + 1);
+
+    let stDateRef = indexDate(start_date);
+    let year = 2020 + ((Date.UTC(start_date.getFullYear(), start_date.getMonth(), start_date.getDate()) - Date.UTC(start_date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000) / 1000;
+    const end = 2020 + ((Date.UTC(end_date.getFullYear(), end_date.getMonth(), end_date.getDate()) - Date.UTC(end_date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000) / 1000;
+
     let svg = d3.select("body").append("svg")
       .attr("width", 960)
       .attr("height", 600)
@@ -104,39 +145,37 @@ References:
     let title = svg.append('text')
       .attr('class', 'title')
       .attr('y', 24)
-      .html('Covid19 Confirmed Cases Progression in Karnataka (Live)');
+      .html(titleText);
 
     let subTitle = svg.append("text")
       .attr("class", "subTitle")
       .attr("y", 55)
-      .html("District, Case Count");
+      .html(subText);
 
     let caption = svg.append('text')
       .attr('class', 'caption')
       .attr('x', width)
       .attr('y', height - 5)
       .style('text-anchor', 'end')
-      .html('Source: covid19india.org | craj.github.io/covid19');
+      .html(capText);
 
-    function formatDate(dDate) {
-      const dateSlice = dDate.toJSON().slice(0, 10);
-      return dateSlice.slice(8, 10) + '/'
-        + dateSlice.slice(5, 7) + '/'
-        + dateSlice.slice(0, 4);
-    }
-
-    const start_date = new Date(2020, 2, 10);
-    const end_date = new Date();
-    let stDateRef = formatDate(start_date);
-
-    let year = 2020 + ((Date.UTC(start_date.getFullYear(), start_date.getMonth(), start_date.getDate()) - Date.UTC(start_date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000) / 1000;
-    const end = 2020 + ((Date.UTC(end_date.getFullYear(), end_date.getMonth(), end_date.getDate()) - Date.UTC(end_date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000) / 1000;
+    let total = svg.append('text')
+      .attr('class', 'totalText')
+      .attr('x', width)
+      .attr('y', height - 160)
+      .style('text-anchor', 'end')
+      .html(totalText);
 
     let data = [];
     let lastUpdated = '';
     let uniqueLabels = new Set();
 
-    const spreadsheetUrl = 'https://spreadsheets.google.com/feeds/list/1nzXUdaIWC84QipdVGUKTiCSc5xntBbpMpzLm6Si33zk/1/public/values?alt=json&callback=extractData';
+    function indexDate(dDate) {
+      const dateSlice = dDate.toJSON().slice(0, 10);
+      return dateSlice.slice(8, 10) + '/'
+        + dateSlice.slice(5, 7) + '/'
+        + dateSlice.slice(0, 4);
+    }
 
     function extractData(data) {
       // console.log(data);
@@ -170,14 +209,14 @@ References:
         let dt = new Date(2020, 0, 30);
         daily_count[s] = [];
         for (; dt <= end_date; dt.setDate(dt.getDate() + 1)) {
-          daily_count[s][formatDate(dt)] = 0;
+          daily_count[s][indexDate(dt)] = 0;
         }
       })
 
       let newData = [];
 
       data.forEach(d => {
-        console.log(d);
+        // console.log(d);
         if (d[2] == "Karnataka") {
           daily_count[d[1]][d[0]] = daily_count[d[1]][d[0]] + 1;
         }
@@ -187,7 +226,7 @@ References:
         let dt = new Date(2020, 0, 30);
         let prvValue = 0;
         for (; dt <= end_date; dt.setDate(dt.getDate() + 1)) {
-          let nDate = formatDate(dt);
+          let nDate = indexDate(dt);
           let yt = 2020 + ((Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()) - Date.UTC(dt.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000) / 1000;
           newData.push({ "state": s, "year": yt, "date": nDate, "value": prvValue + daily_count[s][nDate], "lastValue": prvValue });
           prvValue = prvValue + daily_count[s][nDate];
@@ -196,23 +235,19 @@ References:
 
       // console.log(newData);
       data = newData;
+
       data.forEach(d => {
         d.value = +d.value,
           d.lastValue = +d.lastValue,
           d.value = isNaN(d.value) ? 0 : d.value,
           d.year = +d.year,
-          d.colour = d3.hsl(Math.random() * 360, 0.75, 0.75)
+          d.colour = d3.hsl(districts.indexOf(d.state) * 45 + Math.floor(Math.random() * 15), 0.75, 0.75)
       });
-
-      // let sDate = new Date(2020, 0, 30).toJSON().slice(0, 10);
-      // let stDate = sDate.slice(8, 10) + '/'
-      //   + sDate.slice(5, 7) + '/'
-      //   + sDate.slice(0, 4);
 
       subTitle = svg.append("text")
         .attr("class", "subTitle")
         .attr("y", 55)
-        .html("District, Case Count (Last updated - " + displayDate(lastUpdated) + ")");
+        .html(subText + " (Last updated - " + displayDate(lastUpdated) + ")");
 
       let yearSlice = data.filter(d => d.year == year && !isNaN(d.value))
         .sort((a, b) => b.value - a.value)
@@ -271,12 +306,20 @@ References:
         .attr('y', d => y(d.rank) + 5 + ((y(1) - y(0)) / 2) + 1)
         .text(d => d3.format(',.0f')(d.lastValue));
 
-      let yearText = svg.append('text')
-        .attr('class', 'yearText')
+      let dateText = svg.append('text')
+        .attr('class', 'dateText')
         .attr('x', width - margin.right)
         .attr('y', height - 25)
         .style('text-anchor', 'end')
         .html(stDateRef)
+        .call(halo, 10);
+
+      let countText = svg.append('text')
+        .attr('class', 'countText')
+        .attr('x', width)
+        .attr('y', height - 80)
+        .style('text-anchor', 'end')
+        .text(totalCount)
         .call(halo, 10);
 
       let ticker = d3.interval(e => {
@@ -343,7 +386,6 @@ References:
           .ease(d3.easeLinear)
           .attr('y', d => y(d.rank) + 5 + ((y(1) - y(0)) / 2) + 1);
 
-
         labels
           .transition()
           .duration(tickDuration)
@@ -396,33 +438,41 @@ References:
           .attr('y', d => y(top_n + 1) + 5)
           .remove();
 
+        let newCount = d3.sum(data.filter(d => d.year == year && !isNaN(d.value)), a => a.value);
+
+        svg.selectAll('.countText')
+          .transition()
+          .duration(tickDuration)
+          .tween("text", function () {
+            let i = d3.interpolate(this.textContent, newCount),
+              prec = (newCount + "").split("."),
+              round = (prec.length > 1) ? Math.pow(10, prec[1].length) : 1;
+
+            return function (t) {
+              this.textContent = Math.round(i(t) * round) / round;
+            };
+          });
+
+
+        dateText.html(indexDate(start_date));
+
+        totalCount = newCount;
 
         if (year == end) ticker.stop();
 
+        start_date.setDate(start_date.getDate() + 1);
         year = parseFloat(year) + parseFloat('0.001');
         year = year.toFixed(3);
-
-        start_date.setDate(start_date.getDate() + 1);
-
-        let dispDate = start_date.toJSON().slice(0, 10);
-
-        var dispDateRef = dispDate.slice(8, 10) + '/'
-          + dispDate.slice(5, 7) + '/'
-          + dispDate.slice(0, 4);
-
-        yearText.html(dispDateRef);
 
       }, tickDuration);
 
     };
 
-    // Create JSONP Request to Google Docs API, then execute the callback function doData
     $.ajax({
       url: spreadsheetUrl,
       jsonp: 'extractData',
       dataType: 'jsonp'
     });
-
 
     const halo = function (text, strokeWidth) {
       text.select(function () { return this.parentNode.insertBefore(this.cloneNode(true), this); })
@@ -433,7 +483,6 @@ References:
         .style('opacity', 1);
 
     }
-
 
   </script>
 </body>
