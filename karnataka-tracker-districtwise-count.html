@@ -131,9 +131,9 @@ References:
 
     end_date.setDate(end_date.getDate() + 1);
 
+    let year = dayOfTheYear(start_date);
+    const end = dayOfTheYear(end_date);
     let stDateRef = indexDate(start_date);
-    let year = 2020 + ((Date.UTC(start_date.getFullYear(), start_date.getMonth(), start_date.getDate()) - Date.UTC(start_date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000) / 1000;
-    const end = 2020 + ((Date.UTC(end_date.getFullYear(), end_date.getMonth(), end_date.getDate()) - Date.UTC(end_date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000) / 1000;
 
     let svg = d3.select("body").append("svg")
       .attr("width", 960)
@@ -162,7 +162,7 @@ References:
     let total = svg.append('text')
       .attr('class', 'totalText')
       .attr('x', width)
-      .attr('y', height - 160)
+      .attr('y', height - 120)
       .style('text-anchor', 'end')
       .html(totalText);
 
@@ -201,6 +201,12 @@ References:
       return `${dataISO.getDate()}-${months[dataISO.getMonth()]}-${dataISO.getFullYear()}`;
     }
 
+    function dayOfTheYear(dateToConvert) {
+      const yr = 2020
+      const doy = ((Date.UTC(dateToConvert.getFullYear(), dateToConvert.getMonth(), dateToConvert.getDate()) - Date.UTC(dateToConvert.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000);
+      return yr + doy / 1000;
+    }
+
     function plotGraph(data) {
       // console.log(data);
       const districts = Array.from(uniqueLabels);
@@ -228,7 +234,7 @@ References:
         for (; dt <= end_date; dt.setDate(dt.getDate() + 1)) {
           let nDate = indexDate(dt);
           let yt = 2020 + ((Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()) - Date.UTC(dt.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000) / 1000;
-          newData.push({ "state": s, "year": yt, "date": nDate, "value": prvValue + daily_count[s][nDate], "lastValue": prvValue });
+          newData.push({ "label": s, "year": yt, "date": nDate, "value": prvValue + daily_count[s][nDate], "lastValue": prvValue });
           prvValue = prvValue + daily_count[s][nDate];
         }
       })
@@ -241,7 +247,7 @@ References:
           d.lastValue = +d.lastValue,
           d.value = isNaN(d.value) ? 0 : d.value,
           d.year = +d.year,
-          d.colour = d3.hsl(districts.indexOf(d.state) * 45 + Math.floor(Math.random() * 15), 0.75, 0.75)
+          d.colour = d3.hsl(districts.indexOf(d.label) * 45 + Math.floor(Math.random() * 15), 0.75, 0.75)
       });
 
       subTitle = svg.append("text")
@@ -277,7 +283,7 @@ References:
         .classed('origin', d => d == 0);
 
       svg.selectAll('rect.bar')
-        .data(yearSlice, d => d.state)
+        .data(yearSlice, d => d.label)
         .enter()
         .append('rect')
         .attr('class', 'bar')
@@ -288,17 +294,17 @@ References:
         .style('fill', d => d.colour);
 
       svg.selectAll('text.label')
-        .data(yearSlice, d => d.state)
+        .data(yearSlice, d => d.label)
         .enter()
         .append('text')
         .attr('class', 'label')
         .attr('x', d => x(d.value) - 8)
         .attr('y', d => y(d.rank) + 5 + ((y(1) - y(0)) / 2) + 1)
         .style('text-anchor', 'end')
-        .html(d => d.state);
+        .html(d => d.label);
 
       svg.selectAll('text.valueLabel')
-        .data(yearSlice, d => d.state)
+        .data(yearSlice, d => d.label)
         .enter()
         .append('text')
         .attr('class', 'valueLabel')
@@ -309,7 +315,7 @@ References:
       let dateText = svg.append('text')
         .attr('class', 'dateText')
         .attr('x', width - margin.right)
-        .attr('y', height - 25)
+        .attr('y', 40)
         .style('text-anchor', 'end')
         .html(stDateRef)
         .call(halo, 10);
@@ -317,7 +323,7 @@ References:
       let countText = svg.append('text')
         .attr('class', 'countText')
         .attr('x', width)
-        .attr('y', height - 80)
+        .attr('y', height - 40)
         .style('text-anchor', 'end')
         .text(totalCount)
         .call(halo, 10);
@@ -338,12 +344,12 @@ References:
           .ease(d3.easeLinear)
           .call(xAxis);
 
-        let bars = svg.selectAll('.bar').data(yearSlice, d => d.state);
+        let bars = svg.selectAll('.bar').data(yearSlice, d => d.label);
 
         bars
           .enter()
           .append('rect')
-          .attr('class', d => `bar ${d.state.replace(/\s/g, '_')}`)
+          .attr('class', d => `bar ${d.label.replace(/\s/g, '_')}`)
           .attr('x', x(0) + 1)
           .attr('width', d => x(d.value) - x(0) - 1)
           .attr('y', d => y(top_n + 1) + 5)
@@ -371,7 +377,7 @@ References:
           .remove();
 
         let labels = svg.selectAll('.label')
-          .data(yearSlice, d => d.state);
+          .data(yearSlice, d => d.label);
 
         labels
           .enter()
@@ -380,7 +386,7 @@ References:
           .attr('x', d => x(d.value) - 8)
           .attr('y', d => y(top_n + 1) + 5 + ((y(1) - y(0)) / 2))
           .style('text-anchor', 'end')
-          .html(d => d.state)
+          .html(d => d.label)
           .transition()
           .duration(tickDuration)
           .ease(d3.easeLinear)
@@ -402,7 +408,7 @@ References:
           .attr('y', d => y(top_n + 1) + 5)
           .remove();
 
-        let valueLabels = svg.selectAll('.valueLabel').data(yearSlice, d => d.state);
+        let valueLabels = svg.selectAll('.valueLabel').data(yearSlice, d => d.label);
 
         valueLabels
           .enter()
