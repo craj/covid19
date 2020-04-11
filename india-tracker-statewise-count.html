@@ -31,7 +31,7 @@ References:
 <!DOCTYPE html>
 
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Covid19 India Count - Statewise Confirmed Cases Progression</title>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
@@ -108,7 +108,6 @@ References:
 
 <body>
   <script>
-
     const tickDuration = 1000;
     const top_n = 10;
     const height = 600;
@@ -117,7 +116,7 @@ References:
       top: 80,
       right: 0,
       bottom: 5,
-      left: 0
+      left: 0,
     };
 
     const titleText = "Covid19 Confirmed Cases Progression in India (Live)";
@@ -126,7 +125,8 @@ References:
     const totalText = "Total Count";
     const start_date = new Date(2020, 2, 1);
     const end_date = new Date();
-    const spreadsheetUrl = 'https://spreadsheets.google.com/feeds/list/1nzXUdaIWC84QipdVGUKTiCSc5xntBbpMpzLm6Si33zk/1/public/values?alt=json&callback=extractData';
+    const spreadsheetUrl =
+      "https://spreadsheets.google.com/feeds/list/1nzXUdaIWC84QipdVGUKTiCSc5xntBbpMpzLm6Si33zk/1/public/values?alt=json&callback=extractData";
     let totalCount = 0;
 
     end_date.setDate(end_date.getDate() + 1);
@@ -135,46 +135,56 @@ References:
     const end = dayOfTheYear(end_date);
     let stDateRef = indexDate(start_date);
 
-    let svg = d3.select("body").append("svg")
+    let svg = d3
+      .select("body")
+      .append("svg")
       .attr("width", 960)
       .attr("height", 600)
-      .attr("style", "margin-top: 10px;margin-left: 10px;");
+      .attr("style", "margin-top: 30px;margin-left: 30px;");
 
     let barPadding = (height - (margin.bottom + margin.top)) / (top_n * 5);
 
-    let title = svg.append('text')
-      .attr('class', 'title')
-      .attr('y', 24)
+    let title = svg
+      .append("text")
+      .attr("class", "title")
+      .attr("y", 24)
       .html(titleText);
 
-    let subTitle = svg.append("text")
+    let subTitle = svg
+      .append("text")
       .attr("class", "subTitle")
       .attr("y", 55)
       .html(subText);
 
-    let caption = svg.append('text')
-      .attr('class', 'caption')
-      .attr('x', width)
-      .attr('y', height - 5)
-      .style('text-anchor', 'end')
+    let caption = svg
+      .append("text")
+      .attr("class", "caption")
+      .attr("x", width)
+      .attr("y", height - 5)
+      .style("text-anchor", "end")
       .html(capText);
 
-    let total = svg.append('text')
-      .attr('class', 'totalText')
-      .attr('x', width)
-      .attr('y', height - 120)
-      .style('text-anchor', 'end')
+    let total = svg
+      .append("text")
+      .attr("class", "totalText")
+      .attr("x", width)
+      .attr("y", height - 120)
+      .style("text-anchor", "end")
       .html(totalText);
 
     let data = [];
-    let lastUpdated = '';
+    let lastUpdated = "";
     let uniqueLabels = new Set();
 
     function indexDate(dDate) {
       const dateSlice = dDate.toJSON().slice(0, 10);
-      return dateSlice.slice(8, 10) + '/'
-        + dateSlice.slice(5, 7) + '/'
-        + dateSlice.slice(0, 4);
+      return (
+        dateSlice.slice(8, 10) +
+        "/" +
+        dateSlice.slice(5, 7) +
+        "/" +
+        dateSlice.slice(0, 4)
+      );
     }
 
     function extractData(data) {
@@ -182,26 +192,51 @@ References:
       let results = [];
       let entries = data.feed.entry;
       lastUpdated = entries[0].updated.$t;
-      entries.forEach(e => {
+      entries.forEach((e) => {
         let newRow = [];
         newRow.push(e.gsx$dateannounced.$t);
         newRow.push(e.gsx$detecteddistrict.$t);
         newRow.push(e.gsx$detectedstate.$t);
         uniqueLabels.add(e.gsx$detectedstate.$t);
         results.push(newRow);
-      })
+      });
       plotGraph(results);
     }
 
     function displayDate(lastUpdated) {
-      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
       const dataISO = new Date(lastUpdated);
-      return `${dataISO.getDate()}-${months[dataISO.getMonth()]}-${dataISO.getFullYear()}`;
+      return `${dataISO.getDate()}-${
+        months[dataISO.getMonth()]
+        }-${dataISO.getFullYear()}`;
     }
 
     function dayOfTheYear(dateToConvert) {
-      const yr = 2020
-      const doy = ((Date.UTC(dateToConvert.getFullYear(), dateToConvert.getMonth(), dateToConvert.getDate()) - Date.UTC(dateToConvert.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000);
+      const yr = 2020;
+      const doy =
+        (Date.UTC(
+          dateToConvert.getFullYear(),
+          dateToConvert.getMonth(),
+          dateToConvert.getDate()
+        ) -
+          Date.UTC(dateToConvert.getFullYear(), 0, 0)) /
+        24 /
+        60 /
+        60 /
+        1000;
       return yr + doy / 1000;
     }
 
@@ -209,224 +244,247 @@ References:
       // console.log(data);
       const states = Array.from(uniqueLabels);
       let daily_count = [];
-      states.forEach(s => {
+      states.forEach((s) => {
         let dt = new Date(2020, 0, 30);
         daily_count[s] = [];
         for (; dt <= end_date; dt.setDate(dt.getDate() + 1)) {
           daily_count[s][indexDate(dt)] = 0;
         }
-      })
+      });
 
       let newData = [];
 
-      data.forEach(d => {
+      data.forEach((d) => {
         daily_count[d[2]][d[0]] = daily_count[d[2]][d[0]] + 1;
       });
 
-      states.forEach(s => {
+      states.forEach((s) => {
         let dt = new Date(2020, 0, 30);
         let prvValue = 0;
         for (; dt <= end_date; dt.setDate(dt.getDate() + 1)) {
           let nDate = indexDate(dt);
           let yt = dayOfTheYear(dt);
-          newData.push({ "label": s, "year": yt, "date": nDate, "value": prvValue + daily_count[s][nDate], "lastValue": prvValue });
+          newData.push({
+            label: s,
+            year: yt,
+            date: nDate,
+            value: prvValue + daily_count[s][nDate],
+            lastValue: prvValue,
+          });
           prvValue = prvValue + daily_count[s][nDate];
         }
-      })
+      });
 
       // console.log(newData);
       data = newData;
 
-      data.forEach(d => {
-        d.value = +d.value,
-          d.lastValue = +d.lastValue,
-          d.value = isNaN(d.value) ? 0 : d.value,
-          d.year = +d.year,
-          d.colour = d3.hsl(states.indexOf(d.label) * 45 + Math.floor(Math.random() * 15), 0.75, 0.75)
+      data.forEach((d) => {
+        (d.value = +d.value),
+          (d.lastValue = +d.lastValue),
+          (d.value = isNaN(d.value) ? 0 : d.value),
+          (d.year = +d.year),
+          (d.colour = d3.hsl(
+            states.indexOf(d.label) * 45 + Math.floor(Math.random() * 15),
+            0.75,
+            0.75
+          ));
       });
 
-      subTitle = svg.append("text")
+      subTitle = svg
+        .append("text")
         .attr("class", "subTitle")
         .attr("y", 55)
         .html(subText + " (Last updated - " + displayDate(lastUpdated) + ")");
 
-      let yearSlice = data.filter(d => d.year == year && !isNaN(d.value))
+      let yearSlice = data
+        .filter((d) => d.year == year && !isNaN(d.value))
         .sort((a, b) => b.value - a.value)
         .slice(0, top_n);
 
-      yearSlice.forEach((d, i) => d.rank = i);
+      yearSlice.forEach((d, i) => (d.rank = i));
 
-      let x = d3.scaleLinear()
-        .domain([0, d3.max(yearSlice, d => d.value)])
+      let x = d3
+        .scaleLinear()
+        .domain([0, d3.max(yearSlice, (d) => d.value)])
         .range([margin.left, width - margin.right - 65]);
 
-      let y = d3.scaleLinear()
+      let y = d3
+        .scaleLinear()
         .domain([top_n, 0])
         .range([height - margin.bottom, margin.top]);
 
-      let xAxis = d3.axisTop()
+      let xAxis = d3
+        .axisTop()
         .scale(x)
         .ticks(width > 500 ? 5 : 2)
         .tickSize(-(height - margin.top - margin.bottom))
-        .tickFormat(d => d3.format(',')(d));
+        .tickFormat((d) => d3.format(",")(d));
 
-      svg.append('g')
-        .attr('class', 'axis xAxis')
-        .attr('transform', `translate(0, ${margin.top})`)
+      svg
+        .append("g")
+        .attr("class", "axis xAxis")
+        .attr("transform", `translate(0, ${margin.top})`)
         .call(xAxis)
-        .selectAll('.tick line')
-        .classed('origin', d => d == 0);
+        .selectAll(".tick line")
+        .classed("origin", (d) => d == 0);
 
-      svg.selectAll('rect.bar')
-        .data(yearSlice, d => d.label)
+      svg
+        .selectAll("rect.bar")
+        .data(yearSlice, (d) => d.label)
         .enter()
-        .append('rect')
-        .attr('class', 'bar')
-        .attr('x', x(0) + 1)
-        .attr('width', d => x(d.value) - x(0) - 1)
-        .attr('y', d => y(d.rank) + 5)
-        .attr('height', y(1) - y(0) - barPadding)
-        .style('fill', d => d.colour);
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", x(0) + 1)
+        .attr("width", (d) => x(d.value) - x(0) - 1)
+        .attr("y", (d) => y(d.rank) + 5)
+        .attr("height", y(1) - y(0) - barPadding)
+        .style("fill", (d) => d.colour);
 
-      svg.selectAll('text.label')
-        .data(yearSlice, d => d.label)
+      svg
+        .selectAll("text.label")
+        .data(yearSlice, (d) => d.label)
         .enter()
-        .append('text')
-        .attr('class', 'label')
-        .attr('x', d => x(d.value) - 8)
-        .attr('y', d => y(d.rank) + 5 + ((y(1) - y(0)) / 2) + 1)
-        .style('text-anchor', 'end')
-        .html(d => d.label);
+        .append("text")
+        .attr("class", "label")
+        .attr("x", (d) => x(d.value) - 8)
+        .attr("y", (d) => y(d.rank) + 5 + (y(1) - y(0)) / 2 + 1)
+        .style("text-anchor", "end")
+        .html((d) => d.label);
 
-      svg.selectAll('text.valueLabel')
-        .data(yearSlice, d => d.label)
+      svg
+        .selectAll("text.valueLabel")
+        .data(yearSlice, (d) => d.label)
         .enter()
-        .append('text')
-        .attr('class', 'valueLabel')
-        .attr('x', d => x(d.value) + 5)
-        .attr('y', d => y(d.rank) + 5 + ((y(1) - y(0)) / 2) + 1)
-        .text(d => d3.format(',.0f')(d.lastValue));
+        .append("text")
+        .attr("class", "valueLabel")
+        .attr("x", (d) => x(d.value) + 5)
+        .attr("y", (d) => y(d.rank) + 5 + (y(1) - y(0)) / 2 + 1)
+        .text((d) => d3.format(",.0f")(d.lastValue));
 
-      let dateText = svg.append('text')
-        .attr('class', 'dateText')
-        .attr('x', width - margin.right)
-        .attr('y', 40)
-        .style('text-anchor', 'end')
+      let dateText = svg
+        .append("text")
+        .attr("class", "dateText")
+        .attr("x", width - margin.right)
+        .attr("y", 40)
+        .style("text-anchor", "end")
         .html(stDateRef)
         .call(halo, 10);
 
-      let countText = svg.append('text')
-        .attr('class', 'countText')
-        .attr('x', width)
-        .attr('y', height - 40)
-        .style('text-anchor', 'end')
+      let countText = svg
+        .append("text")
+        .attr("class", "countText")
+        .attr("x", width)
+        .attr("y", height - 40)
+        .style("text-anchor", "end")
         .text(totalCount)
         .call(halo, 10);
 
-      let ticker = d3.interval(e => {
-
-        yearSlice = data.filter(d => d.year == year && !isNaN(d.value))
+      let ticker = d3.interval((e) => {
+        yearSlice = data
+          .filter((d) => d.year == year && !isNaN(d.value))
           .sort((a, b) => b.value - a.value)
           .slice(0, top_n);
 
-        yearSlice.forEach((d, i) => d.rank = i);
+        yearSlice.forEach((d, i) => (d.rank = i));
 
-        x.domain([0, d3.max(yearSlice, d => d.value)]);
+        x.domain([0, d3.max(yearSlice, (d) => d.value)]);
 
-        svg.select('.xAxis')
+        svg
+          .select(".xAxis")
           .transition()
           .duration(tickDuration)
           .ease(d3.easeLinear)
           .call(xAxis);
 
-        let bars = svg.selectAll('.bar').data(yearSlice, d => d.label);
+        let bars = svg.selectAll(".bar").data(yearSlice, (d) => d.label);
 
         bars
           .enter()
-          .append('rect')
-          .attr('class', d => `bar ${d.label.replace(/\s/g, '_')}`)
-          .attr('x', x(0) + 1)
-          .attr('width', d => x(d.value) - x(0) - 1)
-          .attr('y', d => y(top_n + 1) + 5)
-          .attr('height', y(1) - y(0) - barPadding)
-          .style('fill', d => d.colour)
+          .append("rect")
+          .attr("class", (d) => `bar ${d.label.replace(/\s/g, "_")}`)
+          .attr("x", x(0) + 1)
+          .attr("width", (d) => x(d.value) - x(0) - 1)
+          .attr("y", (d) => y(top_n + 1) + 5)
+          .attr("height", y(1) - y(0) - barPadding)
+          .style("fill", (d) => d.colour)
           .transition()
           .duration(tickDuration)
           .ease(d3.easeLinear)
-          .attr('y', d => y(d.rank) + 5);
+          .attr("y", (d) => y(d.rank) + 5);
 
         bars
           .transition()
           .duration(tickDuration)
           .ease(d3.easeLinear)
-          .attr('width', d => x(d.value) - x(0) - 1)
-          .attr('y', d => y(d.rank) + 5);
+          .attr("width", (d) => x(d.value) - x(0) - 1)
+          .attr("y", (d) => y(d.rank) + 5);
 
         bars
           .exit()
           .transition()
           .duration(tickDuration)
           .ease(d3.easeLinear)
-          .attr('width', d => x(d.value) - x(0) - 1)
-          .attr('y', d => y(top_n + 1) + 5)
+          .attr("width", (d) => x(d.value) - x(0) - 1)
+          .attr("y", (d) => y(top_n + 1) + 5)
           .remove();
 
-        let labels = svg.selectAll('.label')
-          .data(yearSlice, d => d.label);
+        let labels = svg.selectAll(".label").data(yearSlice, (d) => d.label);
 
         labels
           .enter()
-          .append('text')
-          .attr('class', 'label')
-          .attr('x', d => x(d.value) - 8)
-          .attr('y', d => y(top_n + 1) + 5 + ((y(1) - y(0)) / 2))
-          .style('text-anchor', 'end')
-          .html(d => d.label)
+          .append("text")
+          .attr("class", "label")
+          .attr("x", (d) => x(d.value) - 8)
+          .attr("y", (d) => y(top_n + 1) + 5 + (y(1) - y(0)) / 2)
+          .style("text-anchor", "end")
+          .html((d) => d.label)
           .transition()
           .duration(tickDuration)
           .ease(d3.easeLinear)
-          .attr('y', d => y(d.rank) + 5 + ((y(1) - y(0)) / 2) + 1);
+          .attr("y", (d) => y(d.rank) + 5 + (y(1) - y(0)) / 2 + 1);
 
         labels
           .transition()
           .duration(tickDuration)
           .ease(d3.easeLinear)
-          .attr('x', d => x(d.value) - 8)
-          .attr('y', d => y(d.rank) + 5 + ((y(1) - y(0)) / 2) + 1);
+          .attr("x", (d) => x(d.value) - 8)
+          .attr("y", (d) => y(d.rank) + 5 + (y(1) - y(0)) / 2 + 1);
 
         labels
           .exit()
           .transition()
           .duration(tickDuration)
           .ease(d3.easeLinear)
-          .attr('x', d => x(d.value) - 8)
-          .attr('y', d => y(top_n + 1) + 5)
+          .attr("x", (d) => x(d.value) - 8)
+          .attr("y", (d) => y(top_n + 1) + 5)
           .remove();
 
-        let valueLabels = svg.selectAll('.valueLabel').data(yearSlice, d => d.label);
+        let valueLabels = svg
+          .selectAll(".valueLabel")
+          .data(yearSlice, (d) => d.label);
 
         valueLabels
           .enter()
-          .append('text')
-          .attr('class', 'valueLabel')
-          .attr('x', d => x(d.value) + 5)
-          .attr('y', d => y(top_n + 1) + 5)
-          .text(d => d3.format(',.0f')(d.lastValue))
+          .append("text")
+          .attr("class", "valueLabel")
+          .attr("x", (d) => x(d.value) + 5)
+          .attr("y", (d) => y(top_n + 1) + 5)
+          .text((d) => d3.format(",.0f")(d.lastValue))
           .transition()
           .duration(tickDuration)
           .ease(d3.easeLinear)
-          .attr('y', d => y(d.rank) + 5 + ((y(1) - y(0)) / 2) + 1);
+          .attr("y", (d) => y(d.rank) + 5 + (y(1) - y(0)) / 2 + 1);
 
         valueLabels
           .transition()
           .duration(tickDuration)
           .ease(d3.easeLinear)
-          .attr('x', d => x(d.value) + 5)
-          .attr('y', d => y(d.rank) + 5 + ((y(1) - y(0)) / 2) + 1)
+          .attr("x", (d) => x(d.value) + 5)
+          .attr("y", (d) => y(d.rank) + 5 + (y(1) - y(0)) / 2 + 1)
           .tween("text", function (d) {
             let i = d3.interpolateRound(d.lastValue, d.value);
             return function (t) {
-              this.textContent = d3.format(',')(i(t));
+              this.textContent = d3.format(",")(i(t));
             };
           });
 
@@ -435,13 +493,17 @@ References:
           .transition()
           .duration(tickDuration)
           .ease(d3.easeLinear)
-          .attr('x', d => x(d.value) + 5)
-          .attr('y', d => y(top_n + 1) + 5)
+          .attr("x", (d) => x(d.value) + 5)
+          .attr("y", (d) => y(top_n + 1) + 5)
           .remove();
 
-        let newCount = d3.sum(data.filter(d => d.year == year && !isNaN(d.value)), a => a.value);
+        let newCount = d3.sum(
+          data.filter((d) => d.year == year && !isNaN(d.value)),
+          (a) => a.value
+        );
 
-        svg.selectAll('.countText')
+        svg
+          .selectAll(".countText")
           .transition()
           .duration(tickDuration)
           .tween("text", function () {
@@ -451,7 +513,6 @@ References:
             };
           });
 
-
         dateText.html(indexDate(start_date));
 
         totalCount = newCount;
@@ -459,28 +520,39 @@ References:
         if (year == end) ticker.stop();
 
         start_date.setDate(start_date.getDate() + 1);
-        year = parseFloat(year) + parseFloat('0.001');
+        year = parseFloat(year) + parseFloat("0.001");
         year = year.toFixed(3);
-
       }, tickDuration);
-
-    };
+    }
 
     $.ajax({
       url: spreadsheetUrl,
-      jsonp: 'extractData',
-      dataType: 'jsonp'
+      jsonp: "extractData",
+      dataType: "jsonp",
     });
 
     const halo = function (text, strokeWidth) {
-      text.select(function () { return this.parentNode.insertBefore(this.cloneNode(true), this); })
-        .style('fill', '#ffffff')
-        .style('stroke', '#ffffff')
-        .style('stroke-width', strokeWidth)
-        .style('stroke-linejoin', 'round')
-        .style('opacity', 1);
-
+      text
+        .select(function () {
+          return this.parentNode.insertBefore(this.cloneNode(true), this);
+        })
+        .style("fill", "#ffffff")
+        .style("stroke", "#ffffff")
+        .style("stroke-width", strokeWidth)
+        .style("stroke-linejoin", "round")
+        .style("opacity", 1);
+    };
+  </script>
+  
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-163325307-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
     }
+    gtag("js", new Date());
 
+    gtag("config", "UA-163325307-1");
   </script>
 </body>
